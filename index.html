@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d31a6">
+  <title>AstroSweph Mobile</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cosmic: {
+              900: '#0B0A18',
+              800: '#14122B',
+              700: '#211D45',
+              accent: '#8B5CF6',
+              gold: '#F59E0B',
+              glow: '#A855F7'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom cosmic theme tweaks */
+    body {
+      background-color: #0d31a6;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(20, 18, 43, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(139, 92, 246, 0.18);
+    }
+    .glow-effect {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+    }
+    .lang-btn { color: #A78BFA; transition: background .2s, color .2s; }
+    .lang-btn.active { background: rgba(139, 92, 246, .25); color: #fff; }
+    /* Hide scrollbars for app-like clean look */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden pb-6">
+
+  <!-- Header -->
+  <header class="relative w-full pt-8 pb-8 px-6 text-center glass-card rounded-b-3xl mb-4 border-t-0 border-x-0 shadow-lg shadow-cyan-500/50">
+    <div class="absolute top-3 right-3 flex rounded-full border border-purple-500/40 overflow-hidden text-[10px] font-bold bg-cosmic-900/60">
+      <button id="lang-ru" class="lang-btn px-2.5 py-1">RU</button>
+      <button id="lang-en" class="lang-btn px-2.5 py-1">EN</button>
+    </div>
+    <div class="flex items-center justify-center space-x-2">
+      <svg class="w-6 h-6 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+      </svg>
+      <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+        AstroSweph
+      </h1>
+    </div>
+    <p class="text-xs text-purple-300/70 mt-1 font-light" data-i18n="ui.tagline">Автономный астрономический расчет</p>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-md mx-auto px-4 flex-1 flex flex-col space-y-5">
+
+    <!-- Date / Time Input Controls -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      
+      <!-- Быстрый выбор: даты запуска криптовалют -->
+      <div class="mt-3">
+        <label class="block text-xs text-gray-400 mb-2" data-i18n="ui.coinLaunch">Дата запуска криптовалюты</label>
+        <select id="coin-select" class="w-full bg-cosmic-900 border border-amber-500/40 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition-all">
+          <option value="">— Выберите монету —</option>
+        </select>
+        <p id="coin-note" class="hidden text-[10px] text-amber-300/70 mt-1.5"></p>
+      </div>
+
+      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-3 mt-3" data-i18n="ui.birthData">Дата запуска</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1" data-i18n="ui.date">Дата</label>
+          <input type="date" id="input-date" class="w-full bg-cosmic-900 border border-purple-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1" data-i18n="ui.time">Время (UTC)</label>
+          <input type="time" id="input-time" class="w-full bg-cosmic-900 border border-purple-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-all">
+        </div>
+      </div>
+      <button id="calc-btn" class="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-medium py-2.5 rounded-xl transition-all shadow-lg active:scale-[0.98]">
+        <span data-i18n="ui.calcBtn">Рассчитать карту</span>
+      </button>
+    </section>
+
+    <!-- Visual Natal Wheel SVG -->
+    <section class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center glow-effect shadow-lg shadow-cyan-500/50">
+      <div class="w-full aspect-square max-w-[320px] relative">
+        <svg id="natal-chart-svg" viewBox="0 0 400 400" class="w-full h-full drop-shadow-md">
+          <!-- Dynamically populated via JavaScript -->
+        </svg>
+      </div>
+    </section>
+
+    <!-- Planetary Positions Table -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-3" data-i18n="ui.positions">Положения планет</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-purple-500/20 text-purple-300/70">
+              <th class="py-2 px-1" data-i18n="ui.thPlanet">Планета</th>
+              <th class="py-2 px-1" data-i18n="ui.thSign">Знак</th>
+              <th class="py-2 px-1" data-i18n="ui.thDeg">Градус</th>
+              <th class="py-2 px-1 text-right" data-i18n="ui.thAbs">Абсолют. °</th>
+            </tr>
+          </thead>
+          <tbody id="planets-tbody" class="divide-y divide-purple-500/10 text-gray-200">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Transits: current sky vs natal chart -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-1" data-i18n="ui.transitsTitle">Транзиты сейчас → натал</h2>
+      <p id="transit-sub" class="text-[10px] text-purple-300/60 mb-3"></p>
+      <div id="transit-chips" class="flex flex-wrap gap-2 mb-3"></div>
+      <div id="transit-list" class="space-y-2"></div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-[10px] text-gray-500 mt-6">
+    <p data-i18n="ui.footer">Engine v2 • JPL Keplerian Elements • 10 тел • точность ~0.1° (1800–2050)</p>
+  </footer>
+
+  <!-- Inline Orbital Calculation Engine & App Logic -->
+  <script>
+    /* =========================================================================
+       EMBEDDED ASTRONOMICAL ENGINE (Keplerian Orbital Elements & Lunar Algorithm)
+       ========================================================================= */
+
+    // Базовые константы и утилиты
+    const D2R = Math.PI / 180;
+    const norm360 = (x) => ((x % 360) + 360) % 360;
+    const sinD = (x) => Math.sin(x * D2R);
+
+    // Юлианский день по алгоритму Меёуса (h — десятичные часы UTC)
+    function getJulianDay(y, m, d, h = 0) {
+      if (m <= 2) { y -= 1; m += 12; }
+      const A = Math.floor(y / 100);
+      const B = 2 - A + Math.floor(A / 4);
+      return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + h / 24 + B - 1524.5;
+    }
+
+    // Кеплеровы элементы орбит JPL: эпоха J2000 + дрейф за юлианский век
+    // a (а.е.), e, I/L/P/N (градусы); d* — изменение за век (36525 дней)
+    const ORBITAL_ELEMENTS = {
+      mercury: { a: 0.38709927, da: 0.00000037,  e: 0.20563593, de: 0.00001906,  I: 7.00497902,   dI: -0.00594749, L: 252.25032350, dL: 149472.67411175, P: 77.45779628,   dP: 0.16047689,  N: 48.33076593,  dN: -0.12534081 },
+      venus:   { a: 0.72333566, da: 0.00000390,  e: 0.00677672, de: -0.00004107, I: 3.39467605,   dI: -0.00078890, L: 181.97909950, dL: 58517.81538729,  P: 131.60246718,  dP: 0.00268329,  N: 76.67984255,  dN: -0.27769418 },
+      earth:   { a: 1.00000261, da: 0.00000562,  e: 0.01671123, de: -0.00004392, I: -0.00001531,  dI: -0.01294668, L: 100.46457166, dL: 35999.37244981,  P: 102.93768193,  dP: 0.32327364,  N: 0.0,          dN: 0.0 },
+      mars:    { a: 1.52371034, da: 0.00001847,  e: 0.09339410, de: 0.00007882,  I: 1.84969142,   dI: -0.00813131, L: -4.55343205,  dL: 19140.30268499,  P: -23.94362959,  dP: 0.44441088,  N: 49.55953891,  dN: -0.29257343 },
+      jupiter: { a: 5.20288700, da: -0.00011607, e: 0.04838624, de: -0.00013253, I: 1.30439695,   dI: -0.00183714, L: 34.39644051,  dL: 3034.74612775,   P: 14.72847983,   dP: 0.21252668,  N: 100.47390909, dN: 0.20469106 },
+      saturn:  { a: 9.53667594, da: -0.00125060, e: 0.05386179, de: -0.00050991, I: 2.48599187,   dI: 0.00193609,  L: 49.95424423,  dL: 1222.49362201,   P: 92.59887831,   dP: -0.41897216, N: 113.66242448, dN: -0.28867794 },
+      uranus:  { a: 19.18916464, da: -0.00196176, e: 0.04725744, de: -0.00004397, I: 0.77263783,  dI: -0.00242939, L: 313.23810451, dL: 428.48202785,    P: 170.95427630,  dP: 0.40805281,  N: 74.01692503,  dN: 0.04240589 },
+      neptune: { a: 30.06992276, da: 0.00026291, e: 0.00859048, de: 0.00005105,  I: 1.77004347,   dI: 0.00035372,  L: -55.12002969, dL: 218.45945325,    P: 44.96476227,   dP: -0.32241464, N: 131.78422574, dN: -0.00508664 },
+      pluto:   { a: 39.48211675, da: -0.00031596, e: 0.24882730, de: 0.00005170, I: 17.14001206,  dI: 0.00004818,  L: 238.92903833, dL: 145.20780515,    P: 224.06891629,  dP: -0.04062942, N: 110.30393684, dN: -0.01183482 }
+    };
+
+    const ZODIAC_SIGNS = [
+      { key: 'sign.aries', symbol: '♈', color: '#EF4444' },
+      { key: 'sign.taurus', symbol: '♉', color: '#10B981' },
+      { key: 'sign.gemini', symbol: '♊', color: '#F59E0B' },
+      { key: 'sign.cancer', symbol: '♋', color: '#3B82F6' },
+      { key: 'sign.leo', symbol: '♌', color: '#EF4444' },
+      { key: 'sign.virgo', symbol: '♍', color: '#10B981' },
+      { key: 'sign.libra', symbol: '♎', color: '#F59E0B' },
+      { key: 'sign.scorpio', symbol: '♏', color: '#3B82F6' },
+      { key: 'sign.sagittarius', symbol: '♐', color: '#EF4444' },
+      { key: 'sign.capricorn', symbol: '♑', color: '#10B981' },
+      { key: 'sign.aquarius', symbol: '♒', color: '#F59E0B' },
+      { key: 'sign.pisces', symbol: '♓', color: '#3B82F6' }
+    ];
+
+    const PLANET_METADATA = [
+      { id: 'sun', key: 'planet.sun', symbol: '☉', color: '#FBBF24' },
+      { id: 'moon', key: 'planet.moon', symbol: '☽', color: '#E2E8F0' },
+      { id: 'mercury', key: 'planet.mercury', symbol: '☿', color: '#A7F3D0' },
+      { id: 'venus', key: 'planet.venus', symbol: '♀', color: '#F472B6' },
+      { id: 'mars', key: 'planet.mars', symbol: '♂', color: '#F87171' },
+      { id: 'jupiter', key: 'planet.jupiter', symbol: '♃', color: '#FCD34D' },
+      { id: 'saturn', key: 'planet.saturn', symbol: '♄', color: '#C084FC' },
+      { id: 'uranus', key: 'planet.uranus', symbol: '\u2645', color: '#22D3EE' },
+      { id: 'neptune', key: 'planet.neptune', symbol: '\u2646', color: '#60A5FA' },
+      { id: 'pluto', key: 'planet.pluto', symbol: '\u2647', color: '#DC2626' }
+    ];
+
+    /* =========================================================================
+       КАТАЛОГ ДАТ ЗАПУСКА КРИПТОВАЛЮТ
+       Даты условные, в UTC: чаще всего используется генезис-блок или запуск
+       mainnet; где точное время неизвестно — 00:00.
+       ========================================================================= */
+    let selectedCoin = null;
+
+    /* =========================================================================
+       I18N: система переводов.
+       Чтобы добавить язык — скопируйте блок 'ru'/'en', переведите значения
+       и добавьте новый ключ (например, de: {...}). Кнопку в шапке
+       добавьте в HTML + обработчик в initLang().
+       ========================================================================= */
+    let lang = 'en';
+
+    const I18N = {
+      ru: {
+        ui: {
+          title: 'AstroSweph Mobile',
+          tagline: 'Автономный астрономический расчет',
+          birthData: 'Или ввести дату вручную',
+          date: 'Дата',
+          time: 'Время (UTC)',
+          coinLaunch: 'Дата запуска криптовалюты',
+          selectCoin: '— Выберите монету —',
+          calcBtn: 'Рассчитать карту',
+          positions: 'Положения планет',
+          thPlanet: 'Планета', thSign: 'Знак', thDeg: 'Градус', thAbs: 'Абсолют. °',
+          transitsTitle: 'Транзиты сейчас → натал',
+          nowNote: 'транзиты на момент открытия (время устройства)',
+          retro: 'Ретроградны', allDirect: 'Все планеты директны',
+          illum: 'освещ.', orb: 'орб',
+          noTransits: 'Сейчас нет точных транзитов к этой натальной карте (орбис 3°).',
+          manualChart: 'карта',
+          timeApprox: 'Время приблизительное, UTC.',
+          footer: 'Engine v2 • JPL Keplerian Elements • 10 тел • точность ~0.1° (1800–2050)'
+        },
+        planet: { sun: 'Солнце', moon: 'Луна', mercury: 'Меркурий', venus: 'Венера', mars: 'Марс',
+                  jupiter: 'Юпитер', saturn: 'Сатурн', uranus: 'Уран', neptune: 'Нептун', pluto: 'Плутон' },
+        sign: { aries: 'Овен', taurus: 'Телец', gemini: 'Близнецы', cancer: 'Рак', leo: 'Лев',
+                virgo: 'Дева', libra: 'Весы', scorpio: 'Скорпион', sagittarius: 'Стрелец',
+                capricorn: 'Козерог', aquarius: 'Водолей', pisces: 'Рыбы' },
+        aspect: { conj: 'соединение', opp: 'оппозиция', sq: 'квадрат', tri: 'трин' },
+        moon: { new: '\u{1F311} Новолуние', waxCrescent: '\u{1F312} Растущий серп',
+                firstQuarter: '\u{1F313} Первая четверть', waxGibbous: '\u{1F314} Растущая Луна',
+                full: '\u{1F315} Полнолуние', wanGibbous: '\u{1F316} Убывающая Луна',
+                lastQuarter: '\u{1F317} Последняя четверть', wanCrescent: '\u{1F318} Убывающий серп' },
+        dur: { moon: 'часы', mercury: 'дни', venus: 'дни', sun: '2–3 дня', mars: '1–2 недели',
+               jupiter: 'недели', saturn: 'месяцы', uranus: 'годы', neptune: 'годы', pluto: 'годы' },
+        tone: {
+          sun:     { conj: 'Точка «включена»: день силы и видимости для этой темы',
+                     opp: 'Кульминация противоположных сил, пиковое напряжение',
+                     sq: 'Напряжённый разворот: конфликт амбиций с реальностью',
+                     tri: 'Гармоничный день: поддержка извне, удачное окно' },
+          moon:    { conj: 'Эмоциональная подсветка: сообщество остро реагирует',
+                     opp: 'Полнолуние на точке карты — эмоциональный максимум, часто разворот настроений',
+                     sq: 'Кратковременное беспокойство толпы',
+                     tri: 'Лёгкое эмоциональное подкрепление' },
+          mercury: { conj: 'Новости и сделки вокруг темы: информационный шум растёт',
+                     opp: 'Полемика и FUD-циклы: нужны прояснения',
+                     sq: 'Технические накладки, недопонимания, отложенные новости',
+                     tri: 'Чёткая коммуникация: хороший момент для анонсов и документации' },
+          venus:   { conj: 'Приток ликвидности и симпатий: «красивое» ралли',
+                     opp: 'Дисбаланс спроса и предложения: перекос в оценках',
+                     sq: 'Переоценка: риск пузыря на эмоциях',
+                     tri: 'Приятный приток капитала, гармоничные партнёрства' },
+          mars:    { conj: 'Всплеск агрессии и объёма: памп, дамп или война нарративов',
+                     opp: 'Открытое противостояние: высокая волатильность',
+                     sq: 'Резкие удары: флеш-крахи, взломы, скандалы',
+                     tri: 'Уверенный наступательный импульс: объёмы на росте' },
+          jupiter: { conj: 'Расширение: хайп, листинги, приток институционалов',
+                     opp: 'Чрезмерное расширение: пузырь на пике эйфории',
+                     sq: 'Переоценка амбиций: обещания опережают реальность',
+                     tri: 'Удачное окно: рост, партнёрства, щедрые награды' },
+          saturn:  { conj: 'Сатурнианская проверка: зрелость вместо хайпа, работа над фундаментом',
+                     opp: 'Противостояние системе: давление регуляторов, тест на выживание',
+                     sq: 'Кризис ответственности: задержки, ограничения, пересмотр базы',
+                     tri: 'Укрепление позиций: долгосрочные инвесторы и стабильность' },
+          uranus:  { conj: 'Внезапный прорыв: технологический скачок или шоковая новость',
+                     opp: 'Разрыв шаблонов: непредсказуемые скачки в обе стороны',
+                     sq: 'Нестабильность: сбои сети, форки, резкие ребрендинги',
+                     tri: 'Изобретательность на службе роста: свежие идеи заходят' },
+          neptune: { conj: 'Туман хайпа: иллюзии и FOMO — включайте критическое мышление',
+                     opp: 'Рассеивание иллюзий: разоблачения, отток веры',
+                     sq: 'Обман и самообман: скам-настроения, мыльные пузыри',
+                     tri: 'Вдохновение и мечты: идеология проекта резонирует' },
+          pluto:   { conj: 'Глубокая трансформация: перерождение проекта или его среды',
+                     opp: 'Экзистенциальная битва: вопрос выживания и власти',
+                     sq: 'Кризис контроля: борьба за ресурсы, манипуляции китами',
+                     tri: 'Эволюция в силу: трансформация идёт легко и необратимо' }
+        },
+        nuance: { sun: 'идентичность и курс монеты', moon: 'настроение и «толпа» сообщества',
+                  mercury: 'новости, код и инфраструктура', venus: 'деньги и ликвидность',
+                  mars: 'движение цены и волатильность', jupiter: 'рост, листинги и инвесторы',
+                  saturn: 'структура и долгосрочные тренды', uranus: 'технологии и неожиданные повороты',
+                  neptune: 'хайп, идеология и иллюзии', pluto: 'власть, капитал и трансформации' },
+        ev: { genesis: 'генезис-блок', ledger: 'запуск реестра', network: 'запуск сети',
+              realcoin: 'запуск (Realcoin)', tokenCreated: 'создание токена', protocol: 'запуск протокола v1',
+              frontier: 'запуск Frontier', mainnetByron: 'mainnet (Byron)', icoStart: 'старт ICO', ico: 'ICO', mainnet: 'mainnet',
+              mainnetBeta: 'mainnet beta', tokenLaunch: 'запуск токена', mainnetOne: 'mainnet One' }
+      },
+
+      en: {
+        ui: {
+          title: 'AstroSweph — Crypto Natal Charts',
+          tagline: 'Standalone astronomical engine',
+          birthData: 'Or enter the date manually',
+          date: 'Date',
+          time: 'Time (UTC)',
+          coinLaunch: 'Coin launch date',
+          selectCoin: '— Select a coin —',
+          calcBtn: 'Calculate chart',
+          positions: 'Planetary positions',
+          thPlanet: 'Planet', thSign: 'Sign', thDeg: 'Degree', thAbs: 'Abs. °',
+          transitsTitle: 'Transits now → natal',
+          nowNote: 'transits at open time (device time)',
+          retro: 'Retrograde', allDirect: 'All planets direct',
+          illum: 'illum.', orb: 'orb',
+          noTransits: 'No exact transits to this natal chart right now (orb 3°).',
+          manualChart: 'chart',
+          timeApprox: 'Time is approximate, UTC.',
+          footer: 'Engine v2 • JPL Keplerian Elements • 10 bodies • accuracy ~0.1° (1800–2050)'
+        },
+        planet: { sun: 'Sun', moon: 'Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars',
+                  jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' },
+        sign: { aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer', leo: 'Leo',
+                virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio', sagittarius: 'Sagittarius',
+                capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces' },
+        aspect: { conj: 'conjunction', opp: 'opposition', sq: 'square', tri: 'trine' },
+        moon: { new: '\u{1F311} New moon', waxCrescent: '\u{1F312} Waxing crescent',
+                firstQuarter: '\u{1F313} First quarter', waxGibbous: '\u{1F314} Waxing gibbous',
+                full: '\u{1F315} Full moon', wanGibbous: '\u{1F316} Waning gibbous',
+                lastQuarter: '\u{1F317} Last quarter', wanCrescent: '\u{1F318} Waning crescent' },
+        dur: { moon: 'hours', mercury: 'days', venus: 'days', sun: '2–3 days', mars: '1–2 weeks',
+               jupiter: 'weeks', saturn: 'months', uranus: 'years', neptune: 'years', pluto: 'years' },
+        tone: {
+          sun:     { conj: "The point is 'switched on': a day of strength and visibility for this theme",
+                     opp: 'Culmination of opposing forces, peak tension',
+                     sq: 'Tense turn: ambitions clash with reality',
+                     tri: 'Harmonious day: outside support, a favorable window' },
+          moon:    { conj: 'Emotional spotlight: the community reacts sharply',
+                     opp: 'Full moon on a chart point — emotional maximum, often a mood reversal',
+                     sq: 'Short-lived crowd anxiety',
+                     tri: 'Gentle emotional reinforcement' },
+          mercury: { conj: 'News and deals around the theme: information noise rises',
+                     opp: 'Controversy and FUD cycles: clarifications needed',
+                     sq: 'Technical glitches, misunderstandings, delayed news',
+                     tri: 'Clear communication: a good moment for announcements and docs' },
+          venus:   { conj: "Inflow of liquidity and sympathy: a 'beautiful' rally",
+                     opp: 'Demand/supply imbalance: valuations skewed',
+                     sq: 'Overvaluation: bubble risk on emotions',
+                     tri: 'Pleasant capital inflow, harmonious partnerships' },
+          mars:    { conj: 'Burst of aggression and volume: pump, dump or narrative war',
+                     opp: 'Open confrontation: high volatility',
+                     sq: 'Sharp hits: flash crashes, hacks, scandals',
+                     tri: 'Confident offensive impulse: rising volumes' },
+          jupiter: { conj: 'Expansion: hype, listings, institutional inflow',
+                     opp: 'Overexpansion: a bubble at peak euphoria',
+                     sq: 'Overrated ambitions: promises outrun reality',
+                     tri: 'Lucky window: growth, partnerships, generous rewards' },
+          saturn:  { conj: 'Saturnian test: maturity over hype, building the foundation',
+                     opp: 'Confrontation with the system: regulatory pressure, survival test',
+                     sq: 'Crisis of responsibility: delays, restrictions, reworking the base',
+                     tri: 'Consolidation: long-term investors and stability' },
+          uranus:  { conj: 'Sudden breakthrough: tech leap or shocking news',
+                     opp: 'Breaking the pattern: unpredictable swings both ways',
+                     sq: 'Instability: network outages, forks, abrupt rebrands',
+                     tri: 'Inventiveness serving growth: fresh ideas land' },
+          neptune: { conj: 'Hype fog: illusions and FOMO — engage critical thinking',
+                     opp: 'Dissipation of illusions: exposés, loss of faith',
+                     sq: 'Deception and self-deception: scam vibes, soap bubbles',
+                     tri: 'Inspiration and dreams: the project ideology resonates' },
+          pluto:   { conj: 'Deep transformation: rebirth of the project or its environment',
+                     opp: 'Existential battle: survival and power at stake',
+                     sq: 'Crisis of control: fight for resources, whale manipulations',
+                     tri: 'Evolution into power: transformation flows easily and irreversibly' }
+        },
+        nuance: { sun: "the coin's identity and course", moon: "community mood and 'the crowd'",
+                  mercury: 'news, code and infrastructure', venus: 'money and liquidity inflow',
+                  mars: 'price action and volatility', jupiter: 'growth, listings and investors',
+                  saturn: 'structure and long-term trends', uranus: 'technology and unexpected turns',
+                  neptune: 'hype, ideology and illusions', pluto: 'power, capital and transformations' },
+        ev: { genesis: 'genesis block', ledger: 'ledger launch', network: 'network launch',
+              realcoin: 'launch (as Realcoin)', tokenCreated: 'token creation', protocol: 'protocol v1 launch',
+              frontier: 'Frontier launch', mainnetByron: 'mainnet (Byron)', icoStart: 'ICO start', ico: 'ICO', mainnet: 'mainnet',
+              mainnetBeta: 'mainnet beta', tokenLaunch: 'token launch', mainnetOne: 'mainnet One' }
+      }
+    };
+
+    // Получить строку по пути 'planet.sun' с фолбэком на русский, затем на ключ
+    function t(path) {
+      const get = (obj) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+      return get(I18N[lang]) ?? get(I18N.ru) ?? path;
+    }
+
+    function applyStatic() {
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.title = t('ui.title');
+      document.documentElement.lang = lang;
+    }
+
+    function setLang(l) {
+      if (!I18N[l]) return;
+      lang = l;
+      localStorage.setItem('astrosweph-lang', l);
+      document.getElementById('lang-ru').classList.toggle('active', l === 'ru');
+      document.getElementById('lang-en').classList.toggle('active', l === 'en');
+      applyStatic();
+      populateCoinSelect();   // пересобрать список монет
+      calculateAndRender();   // перерисовать таблицу, карту и транзиты
+    }
+
+    function initLang() {
+      const saved = localStorage.getItem('astrosweph-lang');
+      lang = saved || ((navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en');
+      applyStatic();
+      document.getElementById('lang-ru').classList.toggle('active', lang === 'ru');
+      document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+    }
+
+
+
+    const COIN_LAUNCHES = [
+      { symbol: 'BTC', name: 'Bitcoin',      date: '2009-01-03', time: '18:15', eventKey: 'genesis' },
+      { symbol: 'LTC', name: 'Litecoin',     date: '2011-10-13', time: '00:00', eventKey: 'genesis' },
+      { symbol: 'XRP', name: 'XRP Ledger',   date: '2013-01-01', time: '00:00', eventKey: 'ledger' },
+      { symbol: 'DOGE', name: 'Dogecoin',    date: '2013-12-06', time: '00:00', eventKey: 'network' },
+      { symbol: 'USDT', name: 'Tether',      date: '2014-10-06', time: '00:00', eventKey: 'realcoin' },
+      { symbol: 'XMR', name: 'Monero',       date: '2014-04-18', time: '00:00', eventKey: 'network' },
+      { symbol: 'XLM', name: 'Stellar',      date: '2014-07-31', time: '00:00', eventKey: 'network' },
+      { symbol: 'ETH', name: 'Ethereum',     date: '2015-07-30', time: '15:26', eventKey: 'frontier' },
+      { symbol: 'ADA', name: 'Cardano',      date: '2017-09-29', time: '00:00', eventKey: 'mainnetByron' },
+      { symbol: 'BNB', name: 'BNB / Binance', date: '2017-06-26', time: '00:00', eventKey: 'icoStart' },
+      { symbol: 'LINK', name: 'Chainlink',   date: '2017-09-19', time: '00:00', eventKey: 'ico' },
+      { symbol: 'TRX', name: 'TRON',         date: '2018-06-25', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'UNI', name: 'Uniswap',      date: '2018-11-02', time: '00:00', eventKey: 'protocol' },
+      { symbol: 'ATOM', name: 'Cosmos',      date: '2019-03-13', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'SOL', name: 'Solana',       date: '2020-03-16', time: '00:00', eventKey: 'mainnetBeta' },
+      { symbol: 'DOT', name: 'Polkadot',     date: '2020-05-26', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'MATIC', name: 'Polygon',    date: '2020-05-30', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'AVAX', name: 'Avalanche',   date: '2020-09-21', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'SHIB', name: 'Shiba Inu',   date: '2020-08-01', time: '00:00', eventKey: 'tokenCreated' },
+      { symbol: 'NEAR', name: 'NEAR',        date: '2020-10-14', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'ARB', name: 'Arbitrum',     date: '2021-08-31', time: '00:00', eventKey: 'mainnetOne' },
+      { symbol: 'APT', name: 'Aptos',        date: '2022-10-17', time: '00:00', eventKey: 'mainnet' },
+      { symbol: 'PEPE', name: 'Pepe',         date: '2023-04-14', time: '00:00', eventKey: 'tokenLaunch' }
+    ];
+
+    // Заполнить селектор монетами
+    function populateCoinSelect() {
+      const sel = document.getElementById('coin-select');
+      sel.innerHTML = `<option value="">${t('ui.selectCoin')}</option>` +
+        COIN_LAUNCHES.map((c, i) => `<option value="${i}">${c.symbol} \u2014 ${c.name} (${c.date})</option>`).join('');
+
+      // Восстановить выбор и подпись после пересборки списка (например, при смене языка)
+      if (selectedCoin) {
+        const idx = COIN_LAUNCHES.indexOf(selectedCoin);
+        if (idx >= 0) sel.value = String(idx);
+        const note = document.getElementById('coin-note');
+        note.textContent = `${selectedCoin.name}: ${t('ev.' + selectedCoin.eventKey)}. ${t('ui.timeApprox')}`;
+        note.classList.remove('hidden');
+      }
+
+      if (sel.dataset.bound) return;
+      sel.dataset.bound = '1';
+      sel.addEventListener('change', () => {
+        const note = document.getElementById('coin-note');
+        if (sel.value === '') {
+          selectedCoin = null;
+          note.classList.add('hidden');
+          return;
+        }
+        const c = COIN_LAUNCHES[Number(sel.value)];
+        selectedCoin = c;
+        document.getElementById('input-date').value = c.date;
+        document.getElementById('input-time').value = c.time;
+        note.textContent = `${c.name}: ${t('ev.' + c.eventKey)}. ${t('ui.timeApprox')}`;
+        note.classList.remove('hidden');
+        calculateAndRender(); // автоматический пересчёт карты
+      });
+    }
+
+    // Решение уравнения Кеплера M = E - e*sin(E) методом Ньютона
+    function solveKepler(Mdeg, e) {
+      let E = Mdeg * D2R;
+      const M = E;
+      for (let k = 0; k < 10; k++) {
+        E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+      }
+      return E;
+    }
+
+    // Гелиоцентрические координаты (эклиптика J2000), а.е.
+    function heliocentric(el, T) {
+      const e = el.e + el.de * T;
+      const I = (el.I + el.dI * T) * D2R;
+      const L = el.L + el.dL * T;
+      const P = el.P + el.dP * T;
+      const N = (el.N + el.dN * T) * D2R;
+      const M = norm360(L - P);
+      const E = solveKepler(M, e);
+      const xp = el.a * (Math.cos(E) - e);
+      const yp = el.a * Math.sqrt(1 - e * e) * Math.sin(E);
+      const w = (P - (el.N + el.dN * T)) * D2R;
+      const cw = Math.cos(w), sw = Math.sin(w);
+      const cN = Math.cos(N), sN = Math.sin(N);
+      const cI = Math.cos(I), sI = Math.sin(I);
+      return {
+        x: (cN * cw - sN * sw * cI) * xp + (-cN * sw - sN * cw * cI) * yp,
+        y: (sN * cw + cN * sw * cI) * xp + (-sN * sw + cN * cw * cI) * yp,
+        z: (sw * sI) * xp + (cw * sI) * yp
+      };
+    }
+
+    // Луна: низкоточная теория (П. Шлятер) с главными возмущениями
+    function moonLongitude(d) {
+      const N = norm360(125.1228 - 0.0529538083 * d);
+      const i = 5.1454;
+      const w = norm360(318.0634 + 0.1643573223 * d);
+      const e = 0.054900;
+      const M = norm360(115.3654 + 13.0649929509 * d);
+
+      const E = solveKepler(M, e);
+      const xv = Math.cos(E) - e;
+      const yv = Math.sqrt(1 - e * e) * Math.sin(E);
+      const v = Math.atan2(yv, xv);
+      const r = Math.sqrt(xv * xv + yv * yv);
+
+      const u = v + w * D2R; // аргумент широты: истинная аномалия + аргумент перигея
+      const nr = N * D2R, ir = i * D2R;
+      const xh = r * (Math.cos(nr) * Math.cos(u) - Math.sin(nr) * Math.sin(u) * Math.cos(ir));
+      const yh = r * (Math.sin(nr) * Math.cos(u) + Math.cos(nr) * Math.sin(u) * Math.cos(ir));
+      let lon = Math.atan2(yh, xh) / D2R;
+
+      // Главные возмущения
+      const Ms = norm360(356.0470 + 0.9856002585 * d);
+      const ws = norm360(282.9404 + 0.0000470935 * d);
+      const Lm = norm360(N + w + M);
+      const D = norm360(Lm - norm360(ws + Ms));
+      const F = norm360(Lm - N);
+
+      lon += -1.274 * sinD(M - 2 * D)
+             + 0.658 * sinD(2 * D)
+             - 0.186 * sinD(Ms)
+             - 0.059 * sinD(2 * M - 2 * D)
+             - 0.057 * sinD(M - 2 * D + Ms)
+             + 0.053 * sinD(M + 2 * D)
+             + 0.046 * sinD(2 * D - Ms)
+             + 0.041 * sinD(M - Ms)
+             - 0.035 * sinD(D)
+             - 0.031 * sinD(M + Ms)
+             - 0.015 * sinD(2 * F - 2 * D)
+             + 0.011 * sinD(M - 4 * D);
+
+      return norm360(lon);
+    }
+
+    // Геоцентрические долготы всех тел (равноденствие даты)
+    function getPlanetaryLongitudes(d) {
+      const T = d / 36525.0;
+      // Общая прецессия: перевод J2000 -> равноденствие даты
+      const precession = 5029.0966 * T / 3600.0;
+
+      const earth = heliocentric(ORBITAL_ELEMENTS.earth, T);
+
+      const geoLon = (key) => {
+        const h = heliocentric(ORBITAL_ELEMENTS[key], T);
+        return norm360(Math.atan2(h.y - earth.y, h.x - earth.x) / D2R + precession);
+      };
+
+      return {
+        sun:     norm360(Math.atan2(-earth.y, -earth.x) / D2R + precession),
+        // Элементы Шлятера заданы на эпоху 2000 Jan 0.0 (JD 2451543.5) — поэтому d + 1.5
+        moon:    moonLongitude(d + 1.5),
+        mercury: geoLon('mercury'),
+        venus:   geoLon('venus'),
+        mars:    geoLon('mars'),
+        jupiter: geoLon('jupiter'),
+        saturn:  geoLon('saturn'),
+        uranus:  geoLon('uranus'),
+        neptune: geoLon('neptune'),
+        pluto:   geoLon('pluto')
+      };
+    }
+
+    // Convert absolute longitude to zodiac breakdown
+    function formatZodiac(longitude) {
+      const norm = norm360(longitude);
+      const signIndex = Math.floor(norm / 30);
+      const degInSign = norm % 30;
+      const deg = Math.floor(degInSign);
+      const min = Math.floor((degInSign - deg) * 60);
+
+      return {
+        sign: ZODIAC_SIGNS[signIndex],
+        degrees: deg,
+        minutes: min,
+        raw: norm
+      };
+    }
+
+    /* =========================================================================
+       UI & SVG RENDERING LOGIC
+       ========================================================================= */
+
+    function renderNatalChartSVG(planetResults) {
+      const svg = document.getElementById('natal-chart-svg');
+      const cx = 200, cy = 200, rOuter = 180, rInner = 140, rPlanet = 115;
+      let svgHtml = '';
+
+      // Outer Zodiac Ring Background
+      svgHtml += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="#3730A3" stroke-width="2"/>`;
+      svgHtml += `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="rgba(15, 12, 41, 0.8)" stroke="#4338CA" stroke-width="1.5"/>`;
+
+      // Render 12 Zodiac Segments
+      ZODIAC_SIGNS.forEach((sign, i) => {
+        const startAngle = (i * 30 - 90) * Math.PI / 180;
+        const endAngle = ((i + 1) * 30 - 90) * Math.PI / 180;
+        const midAngle = ((i + 0.5) * 30 - 90) * Math.PI / 180;
+
+        // Divider lines
+        const x1 = cx + rInner * Math.cos(startAngle);
+        const y1 = cy + rInner * Math.sin(startAngle);
+        const x2 = cx + rOuter * Math.cos(startAngle);
+        const y2 = cy + rOuter * Math.sin(startAngle);
+        svgHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4338CA" stroke-width="1" />`;
+
+        // Zodiac Symbol Text
+        const tx = cx + (rInner + 20) * Math.cos(midAngle);
+        const ty = cy + (rInner + 20) * Math.sin(midAngle) + 5;
+        svgHtml += `<text x="${tx}" y="${ty}" font-size="16" fill="${sign.color}" text-anchor="middle" font-weight="bold">${sign.symbol}</text>`;
+      });
+
+      // Render Planetary Positions & Aspect Markers
+      planetResults.forEach((p) => {
+        const angle = (p.raw - 90) * Math.PI / 180;
+        const px = cx + rPlanet * Math.cos(angle);
+        const py = cy + rPlanet * Math.sin(angle) + 4;
+
+        // Line from inner circle to planet
+        const ix = cx + rInner * Math.cos(angle);
+        const iy = cy + rInner * Math.sin(angle);
+        svgHtml += `<line x1="${ix}" y1="${iy}" x2="${px}" y2="${py}" stroke="${p.meta.color}" stroke-dasharray="2,2" stroke-width="1"/>`;
+
+        // Planet Symbol
+        svgHtml += `<text x="${px}" y="${py}" font-size="15" fill="${p.meta.color}" font-weight="bold" text-anchor="middle" class="drop-shadow-sm">${p.meta.symbol}</text>`;
+      });
+
+      // Aspect lines across chart (Center connects)
+      for (let i = 0; i < planetResults.length; i++) {
+        for (let j = i + 1; j < planetResults.length; j++) {
+          const p1 = planetResults[i];
+          const p2 = planetResults[j];
+          const diff = Math.abs(p1.raw - p2.raw);
+          const aspectDiff = Math.min(diff, 360 - diff);
+
+          // Major aspects: Conjunction (0), Opposition (180), Trine (120), Square (90)
+          let aspectColor = null;
+          if (aspectDiff >= 115 && aspectDiff <= 125) aspectColor = 'rgba(16, 185, 129, 0.4)'; // Trine (Green)
+          else if (aspectDiff >= 85 && aspectDiff <= 95) aspectColor = 'rgba(239, 68, 68, 0.4)'; // Square (Red)
+          else if (aspectDiff >= 175 && aspectDiff <= 185) aspectColor = 'rgba(245, 158, 11, 0.4)'; // Opposition (Orange)
+
+          if (aspectColor) {
+            const a1 = (p1.raw - 90) * Math.PI / 180;
+            const a2 = (p2.raw - 90) * Math.PI / 180;
+            const x1 = cx + (rPlanet - 15) * Math.cos(a1);
+            const y1 = cy + (rPlanet - 15) * Math.sin(a1);
+            const x2 = cx + (rPlanet - 15) * Math.cos(a2);
+            const y2 = cy + (rPlanet - 15) * Math.sin(a2);
+            svgHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${aspectColor}" stroke-width="1.2"/>`;
+          }
+        }
+      }
+
+      // Center decorative ring
+      svgHtml += `<circle cx="${cx}" cy="${cy}" r="25" fill="#14122B" stroke="#6366F1" stroke-width="1"/>`;
+      svgHtml += `<circle cx="${cx}" cy="${cy}" r="3" fill="#A855F7"/>`;
+
+      svg.innerHTML = svgHtml;
+    }
+
+    /* =========================================================================
+       ТРАНЗИТЫ: текущее небо vs натальная карта
+       ========================================================================= */
+    const ASPECT_DEFS = [
+      { key: 'conj', symbol: '\u260C', angle: 0,   color: '#A855F7' },
+      { key: 'opp',  symbol: '\u260D', angle: 180, color: '#F59E0B' },
+      { key: 'sq',   symbol: '\u25A1', angle: 90,  color: '#EF4444' },
+      { key: 'tri',  symbol: '\u25B3', angle: 120, color: '#10B981' }
+    ];
+    const TRANSIT_ORB = 3.0; // градусы
+
+    // Что затрагивает аспект (натальная планета)
+    const NATAL_NUANCE = {
+      sun: 'идентичность и курс монеты', moon: 'настроение и «толпа» сообщества',
+      mercury: 'новости, код и инфраструктура', venus: 'деньги и ликвидность',
+      mars: 'движение цены и волатильность', jupiter: 'рост, листинги и инвесторы',
+      saturn: 'структура и долгосрочные тренды', uranus: 'технологии и неожиданные повороты',
+      neptune: 'хайп, идеология и иллюзии', pluto: 'власть, капитал и трансформации'
+    };
+
+    const TRANSIT_WEIGHT = {
+      pluto: 0, neptune: 1, uranus: 2, saturn: 3, jupiter: 4,
+      mars: 5, sun: 6, venus: 7, mercury: 8, moon: 9
+    };
+
+    // Текущее небо + статус ретроградности (сравнение с позициями сутки назад)
+    function getCurrentSky() {
+      const now = new Date();
+      const jd = getJulianDay(now.getFullYear(), now.getMonth() + 1, now.getDate(),
+                             now.getHours() + now.getMinutes() / 60);
+      const d = jd - 2451545.0;
+      const lons = getPlanetaryLongitudes(d);
+      const lonsPrev = getPlanetaryLongitudes(d - 1);
+      return PLANET_METADATA.map(meta => ({
+        meta,
+        lon: lons[meta.id],
+        retro: meta.id !== 'sun' && meta.id !== 'moon' &&
+               norm360(lons[meta.id] - lonsPrev[meta.id]) > 180
+      }));
+    }
+
+    function moonPhaseName(elong) {
+      const phases = [
+        [22.5, 'moon.new'], [67.5, 'moon.waxCrescent'],
+        [112.5, 'moon.firstQuarter'], [157.5, 'moon.waxGibbous'],
+        [202.5, 'moon.full'], [247.5, 'moon.wanGibbous'],
+        [292.5, 'moon.lastQuarter'], [337.5, 'moon.wanCrescent']
+      ];
+      for (const [limit, key] of phases) if (elong < limit) return t(key);
+      return t('moon.new');
+    }
+
+    function renderTransits(natalResults, natalLabel) {
+      const sky = getCurrentSky();
+      document.getElementById('transit-sub').textContent =
+        natalLabel + ' \u00B7 ' + t('ui.nowNote');
+
+      // --- Чипы: фаза Луны + ретроградные планеты ---
+      const sunLon = sky.find(p => p.meta.id === 'sun').lon;
+      const moonLon = sky.find(p => p.meta.id === 'moon').lon;
+      const elong = norm360(moonLon - sunLon);
+      const illum = (1 - Math.cos(elong * D2R)) / 2;
+      const retro = sky.filter(p => p.retro).map(p => t(p.meta.key));
+
+      const chip = (txt, color) =>
+        `<span class="px-2.5 py-1 rounded-full border text-[10px] font-medium" style="border-color:${color}44;color:${color};background:${color}11">${txt}</span>`;
+      document.getElementById('transit-chips').innerHTML =
+        chip(`${moonPhaseName(elong)} \u00B7 ${t('ui.illum')} ${Math.round(illum * 100)}%`, '#E2E8F0') +
+        (retro.length
+          ? chip(`\u21A9 ${t('ui.retro')}: ${retro.join(', ')}`, '#F59E0B')
+          : chip(t('ui.allDirect'), '#10B981'));
+
+      // --- Активные аспекты транзит -> натал ---
+      const hits = [];
+      sky.forEach(t => natalResults.forEach(n => {
+        const dist = norm360(t.lon - n.raw);
+        const diff = Math.min(dist, 360 - dist);
+        ASPECT_DEFS.forEach(a => {
+          const orb = Math.abs(diff - a.angle);
+          if (orb <= TRANSIT_ORB) hits.push({ t, n, a, orb });
+        });
+      }));
+
+      hits.sort((x, y) => TRANSIT_WEIGHT[x.t.meta.id] - TRANSIT_WEIGHT[y.t.meta.id] || x.orb - y.orb);
+
+      const list = document.getElementById('transit-list');
+      if (!hits.length) {
+        list.innerHTML = `<p class="text-[11px] text-gray-500 py-2">${t('ui.noTransits')}</p>`;
+        return;
+      }
+      list.innerHTML = hits.map(h => `
+        <div class="bg-slate-900/60 border rounded-xl p-3" style="border-color:${h.a.color}33">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold">
+              <span style="color:${h.t.meta.color}">${t(h.t.meta.key)}${h.t.retro ? ' \u211E' : ''}</span>
+              <span style="color:${h.a.color}"> ${h.a.symbol} ${t('aspect.' + h.a.key)} </span>
+              <span style="color:${h.n.meta.color}">${t(h.n.meta.key)}</span>
+            </span>
+            <span class="text-[10px] text-gray-500 shrink-0 ml-2">${t('ui.orb')} ${h.orb.toFixed(1)}\u00B0 \u00B7 ${t('dur.' + h.t.meta.id)}</span>
+          </div>
+          <p class="text-[11px] text-gray-300 leading-snug">${t('tone.' + h.t.meta.id + '.' + h.a.key)} \u2014 ${t('nuance.' + h.n.meta.id)}.</p>
+        </div>
+      `).join('');
+    }
+
+    function calculateAndRender() {
+      const dateVal = document.getElementById('input-date').value;
+      const timeVal = document.getElementById('input-time').value || '00:00';
+
+      if (!dateVal) return;
+
+      const [year, month, day] = dateVal.split('-').map(Number);
+      const [hours, minutes] = timeVal.split(':').map(Number);
+      const decimalHours = hours + minutes / 60.0;
+
+      // Calculate Julian Day & Elapsed Days from J2000
+      const jd = getJulianDay(year, month, day, decimalHours);
+      const d = jd - 2451545.0;
+
+      // Calculate longitudes
+      const lons = getPlanetaryLongitudes(d);
+
+      const planetResults = PLANET_METADATA.map((meta) => {
+        const rawLon = lons[meta.id];
+        const formatted = formatZodiac(rawLon);
+        return {
+          meta,
+          ...formatted
+        };
+      });
+
+      // Update Table
+      const tbody = document.getElementById('planets-tbody');
+      tbody.innerHTML = planetResults.map(p => `
+        <tr class="hover:bg-purple-900/10 transition-colors">
+          <td class="py-2.5 px-1 font-medium flex items-center space-x-1.5" style="color:${p.meta.color}">
+            <span class="text-sm">${p.meta.symbol}</span>
+            <span>${t(p.meta.key)}</span>
+          </td>
+          <td class="py-2.5 px-1 font-semibold" style="color:${p.sign.color}">
+            ${p.sign.symbol} ${t(p.sign.key)}
+          </td>
+          <td class="py-2.5 px-1">${p.degrees}° ${p.minutes}'</td>
+          <td class="py-2.5 px-1 text-right text-gray-400 font-mono text-[11px]">${p.raw.toFixed(2)}°</td>
+        </tr>
+      `).join('');
+
+      // Update SVG Chart
+      renderNatalChartSVG(planetResults);
+
+      // Update Transits block
+      const natalLabel = selectedCoin
+        ? `${selectedCoin.symbol} \u2014 ${selectedCoin.name} \u00B7 ${dateVal} ${timeVal} UTC`
+        : `${t('ui.manualChart')} ${dateVal} ${timeVal} UTC`;
+      renderTransits(planetResults, natalLabel);
+    }
+
+    // Set Default Values on Load (Current Date & Time)
+    window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, '0');
+      const da = String(now.getDate()).padStart(2, '0');
+      const hr = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+
+      document.getElementById('input-date').value = `${yr}-${mo}-${da}`;
+      document.getElementById('input-time').value = `${hr}:${mi}`;
+
+      initLang();
+      populateCoinSelect();
+
+      // Обработчики вешаем до первого расчёта, чтобы UI не «умирал» при любой ошибке движка
+      document.getElementById('calc-btn').addEventListener('click', calculateAndRender);
+      document.getElementById('lang-ru').addEventListener('click', () => setLang('ru'));
+      document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
+
+      calculateAndRender();
+    });
+  </script>
+</body>
+</html>
