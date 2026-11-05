@@ -82,6 +82,15 @@
   <!-- Main Container -->
   <main class="w-full max-w-md mx-auto px-4 flex-1 flex flex-col space-y-5">
 
+    <!-- Volatility Calendar (30 days) -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-1" id="cal-title"></h2>
+      <p id="cal-sub" class="text-[10px] text-purple-300/60 mb-3"></p>
+      <div id="vol-calendar" class="grid grid-cols-7 gap-1.5"></div>
+      <div id="cal-legend" class="flex flex-wrap gap-2 mt-3"></div>
+      <div id="cal-detail" class="hidden mt-3 bg-slate-900/60 border border-purple-500/20 rounded-xl p-3"></div>
+    </section>
+
     <!-- Date / Time Input Controls -->
     <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
       
@@ -425,6 +434,7 @@
       applyStatic();
       populateCoinSelect();   // пересобрать список монет
       calculateAndRender();   // перерисовать таблицу, карту и транзиты
+      renderVolatilityCalendar();
     }
 
     function initLang() {
@@ -853,6 +863,194 @@
       renderTransits(planetResults, natalLabel);
     }
 
+
+    /* =========================================================================
+       КАЛЕНДАРЬ ВОЛАТИЛЬНОСТИ: оценка на 30 дней вперёд
+       Эвристика: лунные фазы (новолуние/полнолуние), жёсткие аспекты
+       (соединение/квадрат/оппозиция) между планетами с весами «медленных»
+       тел, ретроградность Меркурия и Марса.
+       ========================================================================= */
+    const CAL_I18N = {
+      ru: {
+        title: 'Календарь волатильности · 30 дней',
+        sub: 'Эвристика: фазы Луны, аспекты планет, ретроградность · нажмите на день',
+        weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+        low: 'Низкая', mod: 'Умеренная', high: 'Высокая', extreme: 'Экстремальная',
+        score: 'индекс', sun: 'Солнце', moon: 'Луна', phase: 'Фаза Луны',
+        retro: 'Ретроградны', allDirect: 'все планеты директны',
+        aspects: 'Ключевые аспекты дня', noAspects: 'Точных жёстких аспектов нет — спокойный фон.',
+        lum: 'освещ.'
+      },
+      en: {
+        title: 'Volatility Calendar · 30 days',
+        sub: 'Heuristics: Moon phases, planetary aspects, retrograde motion · tap a day',
+        weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+        low: 'Low', mod: 'Moderate', high: 'High', extreme: 'Extreme',
+        score: 'index', sun: 'Sun', moon: 'Moon', phase: 'Moon phase',
+        retro: 'Retrograde', allDirect: 'all planets direct',
+        aspects: 'Key aspects of the day', noAspects: 'No exact hard aspects — calm background.',
+        lum: 'illum.'
+      }
+    };
+
+    function ct(path) {
+      const get = (obj) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+      return get(CAL_I18N[lang]) ?? get(CAL_I18N.ru) ?? path;
+    }
+
+    const VOL_LEVELS = [
+      { max: 3.0,  key: 'low',     color: '#10B981' },
+      { max: 5.5,  key: 'mod',     color: '#F59E0B' },
+      { max: 8.0,  key: 'high',    color: '#F97316' },
+      { max: 1e9,  key: 'extreme', color: '#EF4444' }
+    ];
+
+    const VOL_WEIGHT = { sun: 1, moon: 1, mercury: 1, venus: 1, mars: 2,
+                         jupiter: 1, saturn: 2.5, uranus: 2, neptune: 1.5, pluto: 3 };
+
+    function moonEmoji(elong) {
+      if (elong < 22.5 || elong >= 337.5) return '\u{1F311}';
+      if (elong < 67.5)  return '\u{1F312}';
+      if (elong < 112.5) return '\u{1F313}';
+      if (elong < 157.5) return '\u{1F314}';
+      if (elong < 202.5) return '\u{1F315}';
+      if (elong < 247.5) return '\u{1F316}';
+      if (elong < 292.5) return '\u{1F317}';
+      return '\u{1F318}';
+    }
+
+    // Анализ одного дня: индекс волатильности + детали
+    function analyzeDay(d) {
+      const lons = getPlanetaryLongitudes(d);
+      const prev = getPlanetaryLongitudes(d - 1);
+      const ids = PLANET_METADATA.map(m => m.id);
+
+      const retro = ids.filter(id => id !== 'sun' && id !== 'moon' &&
+        norm360(lons[id] - prev[id]) > 180);
+
+      let score = 0;
+      const aspects = [];
+      const HARD = [ { key: 'conj', sym: '\u260C', angle: 0 },
+                     { key: 'sq',   sym: '\u25A1', angle: 90 },
+                     { key: 'opp',  sym: '\u260D', angle: 180 } ];
+
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const dist = norm360(lons[ids[i]] - lons[ids[j]]);
+          const diff = Math.min(dist, 360 - dist);
+          HARD.forEach(a => {
+            const orb = Math.abs(diff - a.angle);
+            if (orb <= 5) {
+              const w = VOL_WEIGHT[ids[j]] || 1; // медленная планета задаёт вес
+              score += w * (1 - orb / 5);
+              aspects.push({ fast: ids[i], slow: ids[j], key: a.key, sym: a.sym, orb });
+            }
+          });
+        }
+      }
+
+      // Лунные фазы: новолуние и полнолуние — пики активности
+      const elong = norm360(lons.moon - lons.sun);
+      const dNew = Math.min(elong, 360 - elong);
+      const dFull = Math.abs(elong - 180);
+      if (dNew < 12 || dFull < 12) score += 2;
+      else if (dNew < 25 || dFull < 25) score += 1;
+
+      // Ретроградность Меркурия и Марса повышает нестабильность
+      if (retro.includes('mercury')) score += 1;
+      if (retro.includes('mars')) score += 1.5;
+
+      aspects.sort((a, b) => a.orb - b.orb);
+      return { score, aspects: aspects.slice(0, 6), retro, elong, lons };
+    }
+
+    function renderVolatilityCalendar() {
+      document.getElementById('cal-title').textContent = ct('title');
+      document.getElementById('cal-sub').textContent = ct('sub');
+
+      // Легенда
+      document.getElementById('cal-legend').innerHTML = VOL_LEVELS.map(l =>
+        `<span class="px-2 py-0.5 rounded-full border text-[10px] font-medium"
+               style="border-color:${l.color}55;color:${l.color};background:${l.color}11">${ct(l.key)}</span>`
+      ).join('');
+
+      const grid = document.getElementById('vol-calendar');
+      const today = new Date();
+      const days = [];
+      for (let k = 0; k < 30; k++) {
+        const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + k);
+        const jd = getJulianDay(date.getFullYear(), date.getMonth() + 1, date.getDate(), 12);
+        const a = analyzeDay(jd - 2451545.0);
+        const level = VOL_LEVELS.find(l => a.score < l.max);
+        days.push({ date, analysis: a, level, k });
+      }
+
+      // Заголовки недели (начало с понедельника)
+      let html = ct('weekdays').map(w =>
+        `<div class="text-center text-[10px] font-semibold text-purple-300/60 py-1">${w}</div>`).join('');
+
+      // Пустые ячейки до первого дня
+      const offset = (days[0].date.getDay() + 6) % 7;
+      html += '<div></div>'.repeat(offset);
+
+      html += days.map((d, idx) => `
+        <button data-cal-idx="${idx}"
+          class="cal-day aspect-square rounded-lg border flex flex-col items-center justify-center transition-transform active:scale-95 ${d.k === 0 ? 'ring-1 ring-cyan-400/70' : ''}"
+          style="border-color:${d.level.color}44;background:${d.level.color}0d">
+          <span class="text-[11px] font-bold" style="color:${d.level.color}">${d.date.getDate()}</span>
+          <span class="text-[9px]">${moonEmoji(d.analysis.elong)}</span>
+          <span class="text-[8px] text-gray-500">${d.analysis.score.toFixed(0)}</span>
+        </button>`).join('');
+
+      grid.innerHTML = html;
+
+      grid.querySelectorAll('.cal-day').forEach(btn =>
+        btn.addEventListener('click', () => showDayDetail(days[Number(btn.dataset.calIdx)])));
+    }
+
+    function showDayDetail(d) {
+      const panel = document.getElementById('cal-detail');
+      panel.classList.remove('hidden');
+      const a = d.analysis;
+      const loc = lang === 'ru' ? 'ru-RU' : 'en-GB';
+      const dateStr = d.date.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' });
+      const sunSign = formatZodiac(a.lons.sun);
+      const moonSign = formatZodiac(a.lons.moon);
+      const illum = Math.round((1 - Math.cos(a.elong * D2R)) / 2 * 100);
+
+      const aspectRows = a.aspects.length
+        ? a.aspects.map(x => {
+            const tone = t('tone.' + x.slow + '.' + x.key);
+            const nuance = t('nuance.' + x.slow);
+            return `<div class="flex items-start space-x-2 py-1 border-b border-purple-500/10 last:border-0">
+              <span class="text-xs font-bold shrink-0 pt-0.5" style="color:${(PLANET_METADATA.find(m=>m.id===x.fast)||{}).color || '#fff'}">${t('planet.' + x.fast)}</span>
+              <span class="text-sm shrink-0">${x.sym}</span>
+              <span class="text-xs font-bold shrink-0 pt-0.5" style="color:${(PLANET_METADATA.find(m=>m.id===x.slow)||{}).color || '#fff'}">${t('planet.' + x.slow)}</span>
+              <span class="text-[10px] text-gray-500 shrink-0 pt-1">${ct('score')} ${x.orb.toFixed(1)}°</span>
+            </div>
+            <p class="text-[11px] text-gray-300 leading-snug -mt-0.5 mb-1.5 pl-1">${tone} — ${nuance}.</p>`;
+          }).join('')
+        : `<p class="text-[11px] text-gray-500 py-1">${ct('noAspects')}</p>`;
+
+      panel.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold capitalize">${dateStr}</span>
+          <span class="px-2 py-0.5 rounded-full border text-[10px] font-semibold"
+                style="border-color:${d.level.color}66;color:${d.level.color};background:${d.level.color}15">
+            ${ct(d.level.key)} · ${ct('score')} ${a.score.toFixed(1)}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-300 mb-2">
+          <div>${ct('sun')}: <span style="color:${sunSign.sign.color}">${sunSign.sign.symbol} ${t(sunSign.sign.key)}</span></div>
+          <div>${ct('moon')}: <span style="color:${moonSign.sign.color}">${moonSign.sign.symbol} ${t(moonSign.sign.key)}</span></div>
+          <div class="col-span-2">${ct('phase')}: ${moonEmoji(a.elong)} ${t(moonPhaseName(a.elong).replace(/^\S+\s/, ''))} · ${ct('lum')} ${illum}%</div>
+          <div class="col-span-2">${a.retro.length ? `\u21A9 ${ct('retro')}: ${a.retro.map(id => t('planet.' + id)).join(', ')}` : ct('allDirect')}</div>
+        </div>
+        <p class="text-[10px] uppercase tracking-wider text-purple-300/70 font-semibold mb-1">${ct('aspects')}</p>
+        ${aspectRows}`;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
     // Set Default Values on Load (Current Date & Time)
     window.addEventListener('DOMContentLoaded', () => {
       const now = new Date();
@@ -874,6 +1072,7 @@
       document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
 
       calculateAndRender();
+      renderVolatilityCalendar();
     });
   </script>
 </body>
