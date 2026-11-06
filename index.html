@@ -12,7 +12,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0d31a6">
+  <meta name="theme-color" content="#090A0F">
   <title>AstroSweph Mobile</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,12 +22,12 @@
         extend: {
           colors: {
             cosmic: {
-              900: '#0B0A18',
-              800: '#14122B',
+              900: '#090A0F',
+              800: '#141622',
               700: '#211D45',
-              accent: '#8B5CF6',
+              accent: '#00E676',
               gold: '#F59E0B',
-              glow: '#A855F7'
+              glow: '#00E676'
             }
           }
         }
@@ -37,50 +37,73 @@
   <style>
     /* Custom cosmic theme tweaks */
     body {
-      background-color: #0934c1;
-      color: #E2E8F0;
+      background-color: #090A0F;
+      color: #FFFFFF;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
     .glass-card {
-      background: rgba(20, 18, 43, 0.5);
+      background: rgba(20, 22, 34, 0.55);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139, 92, 246, 0.18);
+      border: 1px solid rgba(0, 230, 118, 0.10);
     }
     .glow-effect {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.20);
     }
-    .lang-btn { color: #A78BFA; transition: background .2s, color .2s; }
-    .lang-btn.active { background: rgba(139, 92, 246, .25); color: #fff; }
+    .lang-btn { color: #8F94A8; transition: background .2s, color .2s; }
+    .lang-btn.active { background: rgba(0, 230, 118, .18); color: #00E676; }
+
+    /* ===== Bottom navigation / chips / header (Etaps 1-2) ===== */
+    .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 10px; color: #8F94A8; font-size: 10px; font-weight: 600; letter-spacing: .04em; transition: color .2s; }
+    .tab-btn.tab-active { color: #00E676; }
+    .tab-btn:active { transform: scale(.94); }
+    .hdr-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; color: #8F94A8; border: 1px solid rgba(143,148,168,0.18); background: rgba(20,22,34,0.7); transition: all .2s; }
+    .hdr-btn:active { transform: scale(.9); color: #00E676; border-color: rgba(0,230,118,0.5); }
+    .chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #8F94A8; background: rgba(20,22,34,0.7); border: 1px solid rgba(143,148,168,0.18); transition: all .2s; white-space: nowrap; }
+    .chip:active { transform: scale(.94); }
+    .chip-active { color: #00E676; border-color: rgba(0,230,118,0.7); background: rgba(0,230,118,0.12); box-shadow: 0 0 14px rgba(0,230,118,0.28); }
+    .live-dot { width: 6px; height: 6px; border-radius: 9999px; background: #00E676; box-shadow: 0 0 6px #00E676; animation: pulse-dot 1.6s infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
     /* Hide scrollbars for app-like clean look */
     ::-webkit-scrollbar {
       display: none;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between overflow-x-hidden pb-6">
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden pb-24">
 
-  <!-- Header -->
-  <header class="relative w-full pt-8 pb-8 px-6 text-center glass-card rounded-b-3xl mb-4 border-t-0 border-x-0 shadow-lg shadow-cyan-500/50">
-    <div class="absolute top-3 right-3 flex rounded-full border border-purple-500/40 overflow-hidden text-[10px] font-bold bg-cosmic-900/60">
-      <button id="lang-ru" class="lang-btn px-2.5 py-1">RU</button>
-      <button id="lang-en" class="lang-btn px-2.5 py-1">EN</button>
-    </div>
-    <div class="flex items-center justify-center space-x-2">
-      <svg class="w-6 h-6 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-      </svg>
-      <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
-        AstroSweph
-      </h1>
-    </div>
-    <p class="text-xs text-purple-300/70 mt-1 font-light" data-i18n="ui.tagline">Автономный астрономический расчет</p>
-  </header>
 
   <!-- Main Container -->
   <main class="w-full max-w-md mx-auto px-4 flex-1 flex flex-col space-y-5">
+
+    <!-- ===== TAB: MAP (Этап 1) ===== -->
+    <div id="tab-map" class="tab-page space-y-5">
+
+    <!-- App header (Этап 2): заголовок, поиск/настройки, лента чипсов монет -->
+    <div>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400">AstroSweph</h1>
+          <p class="text-[10px] font-light" style="color:#8F94A8" data-i18n="ui.tagline">Автономный астрономический расчет</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="search-btn" class="hdr-btn" aria-label="search">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg>
+          </button>
+          <button id="settings-btn" class="hdr-btn" aria-label="settings">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </button>
+          <div class="flex rounded-full border overflow-hidden text-[10px] font-bold" style="border-color:#23b87059">
+            <button id="lang-ru" class="lang-btn px-2 py-1.5">RU</button>
+            <button id="lang-en" class="lang-btn px-2 py-1.5">EN</button>
+          </div>
+        </div>
+      </div>
+      <input id="chip-filter" type="text" class="hidden w-full mt-2 bg-cosmic-900 border rounded-xl px-3 py-2 text-sm text-white focus:outline-none transition-all" style="border-color:rgba(0,230,118,0.3)" placeholder="Поиск монеты…">
+      <div id="coin-chips" class="flex gap-2 overflow-x-auto mt-3 pb-1"></div>
+    </div>
 
     <!-- Date / Time Input Controls -->
     <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
@@ -105,7 +128,7 @@
           <input type="time" id="input-time" class="w-full bg-cosmic-900 border border-purple-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-all">
         </div>
       </div>
-      <button id="calc-btn" class="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-medium py-2.5 rounded-xl transition-all shadow-lg active:scale-[0.98]">
+      <button id="calc-btn" class="w-full mt-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white text-sm font-medium py-2.5 rounded-xl transition-all shadow-lg active:scale-[0.98]">
         <span data-i18n="ui.calcBtn">Рассчитать карту</span>
       </button>
     </section>
@@ -119,8 +142,8 @@
       </div>
     </section>
 
-    <!-- Planetary Positions Table -->
-    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+    <!-- Planetary Positions Table ( Progressive Disclosure: скрывается кнопкой настроек ) -->
+    <section id="positions-section" class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
       <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-3" data-i18n="ui.positions">Положения планет</h2>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
@@ -148,6 +171,11 @@
     </section>
 
 
+    </div>
+
+    <!-- ===== TAB: CALENDAR ===== -->
+    <div id="tab-calendar" class="tab-page hidden space-y-5">
+
     <!-- Volatility Calendar (30 days) -->
     <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
       <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-1" id="cal-title"></h2>
@@ -157,6 +185,11 @@
       <div id="cal-detail" class="hidden mt-3 bg-slate-900/60 border border-purple-500/20 rounded-xl p-3"></div>
     </section>
 
+
+    </div>
+
+    <!-- ===== TAB: MARKET ===== -->
+    <div id="tab-market" class="tab-page hidden space-y-5">
 
     <!-- Live price chart (Binance public API + WebSocket) -->
     <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
@@ -181,7 +214,27 @@
       <p id="live-status" class="hidden text-[11px] text-red-400 mt-2"></p>
     </section>
 
+    </div>
+
   </main>
+
+  <!-- Bottom Navigation (Этап 1): Карта / Календарь / Рынок -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50" style="padding: 24px 0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(0,230,118,0.15)">
+    <div class="max-w-md mx-auto grid grid-cols-3">
+      <button class="tab-btn tab-active" data-tab="map">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L4.075 10.1c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        <span data-i18n="ui.tabMap">Карта</span>
+      </button>
+      <button class="tab-btn" data-tab="calendar">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span data-i18n="ui.tabCal">Календарь</span>
+      </button>
+      <button class="tab-btn" data-tab="market">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+        <span data-i18n="ui.tabMarket">Рынок</span>
+      </button>
+    </div>
+  </nav>
 
   <!-- Footer -->
   <footer class="text-center text-[10px] text-gray-500 mt-6">
@@ -224,31 +277,33 @@
     };
 
     const ZODIAC_SIGNS = [
-      { key: 'sign.aries', symbol: '♈', color: '#EF4444' },
-      { key: 'sign.taurus', symbol: '♉', color: '#10B981' },
-      { key: 'sign.gemini', symbol: '♊', color: '#F59E0B' },
-      { key: 'sign.cancer', symbol: '♋', color: '#3B82F6' },
-      { key: 'sign.leo', symbol: '♌', color: '#EF4444' },
-      { key: 'sign.virgo', symbol: '♍', color: '#10B981' },
-      { key: 'sign.libra', symbol: '♎', color: '#F59E0B' },
-      { key: 'sign.scorpio', symbol: '♏', color: '#3B82F6' },
-      { key: 'sign.sagittarius', symbol: '♐', color: '#EF4444' },
-      { key: 'sign.capricorn', symbol: '♑', color: '#10B981' },
-      { key: 'sign.aquarius', symbol: '♒', color: '#F59E0B' },
-      { key: 'sign.pisces', symbol: '♓', color: '#3B82F6' }
+      { key: 'sign.aries', symbol: '♈︎', color: '#10B981' },
+      { key: 'sign.taurus', symbol: '♉︎', color: '#10B981' },
+      { key: 'sign.gemini', symbol: '♊︎', color: '#00E676' },
+      { key: 'sign.cancer', symbol: '♋︎', color: '#10B981' },
+      { key: 'sign.leo', symbol: '♌︎', color: '#10B981' },
+      { key: 'sign.virgo', symbol: '♍︎', color: '#00E676' },
+      { key: 'sign.libra', symbol: '♎︎', color: '#10B981' },
+      { key: 'sign.scorpio', symbol: '♏︎', color: '#10B981' },
+      { key: 'sign.sagittarius', symbol: '♐︎', color: '#00E676' },
+      { key: 'sign.capricorn', symbol: '♑︎', color: '#10B981' },
+      { key: 'sign.aquarius', symbol: '♒︎', color: '#10B981' },
+      { key: 'sign.pisces', symbol: '♓︎', color: '#00E676' }
     ];
 
+    // Единый изумрудный диапазон акцентного цвета #00E676 (Этап 3):
+    // каждая планета — свой оттенок/светлота, но внутри одной гаммы
     const PLANET_METADATA = [
-      { id: 'sun', key: 'planet.sun', symbol: '☉', color: '#FBBF24' },
-      { id: 'moon', key: 'planet.moon', symbol: '☽', color: '#E2E8F0' },
-      { id: 'mercury', key: 'planet.mercury', symbol: '☿', color: '#A7F3D0' },
-      { id: 'venus', key: 'planet.venus', symbol: '♀', color: '#F472B6' },
-      { id: 'mars', key: 'planet.mars', symbol: '♂', color: '#F87171' },
-      { id: 'jupiter', key: 'planet.jupiter', symbol: '♃', color: '#FCD34D' },
-      { id: 'saturn', key: 'planet.saturn', symbol: '♄', color: '#C084FC' },
-      { id: 'uranus', key: 'planet.uranus', symbol: '\u2645', color: '#22D3EE' },
-      { id: 'neptune', key: 'planet.neptune', symbol: '\u2646', color: '#60A5FA' },
-      { id: 'pluto', key: 'planet.pluto', symbol: '\u2647', color: '#DC2626' }
+      { id: 'sun',     key: 'planet.sun',     symbol: '☉', color: '#7CFFB2' },
+      { id: 'moon',    key: 'planet.moon',    symbol: '☽', color: '#D2FFE4' },
+      { id: 'mercury', key: 'planet.mercury', symbol: '☿', color: '#4ADE9C' },
+      { id: 'venus',   key: 'planet.venus',   symbol: '♀', color: '#8CFFC2' },
+      { id: 'mars',    key: 'planet.mars',    symbol: '♂', color: '#00E676' },
+      { id: 'jupiter', key: 'planet.jupiter', symbol: '♃', color: '#5CFFA0' },
+      { id: 'saturn',  key: 'planet.saturn',  symbol: '♄', color: '#2EEA8B' },
+      { id: 'uranus',  key: 'planet.uranus',  symbol: '\u2645', color: '#A7FFCA' },
+      { id: 'neptune', key: 'planet.neptune', symbol: '\u2646', color: '#38F79B' },
+      { id: 'pluto',   key: 'planet.pluto',   symbol: '\u2647', color: '#00C96A' }
     ];
 
     /* =========================================================================
@@ -276,6 +331,8 @@
           time: 'Время (UTC)',
           coinLaunch: 'Дата запуска криптовалюты',
           selectCoin: '— Выберите монету —',
+          tabMap: 'Карта', tabCal: 'Календарь', tabMarket: 'Рынок',
+          showMore: 'Показать еще', showLess: 'Свернуть', searchPh: 'Поиск монеты…',
           calcBtn: 'Рассчитать карту',
           positions: 'Положения планет',
           thPlanet: 'Планета', thSign: 'Знак', thDeg: 'Градус', thAbs: 'Абсолют. °',
@@ -362,6 +419,8 @@
           time: 'Time (UTC)',
           coinLaunch: 'Coin launch date',
           selectCoin: '— Select a coin —',
+          tabMap: 'Chart', tabCal: 'Calendar', tabMarket: 'Market',
+          showMore: 'Show more', showLess: 'Collapse', searchPh: 'Search coin…',
           calcBtn: 'Calculate chart',
           positions: 'Planetary positions',
           thPlanet: 'Planet', thSign: 'Sign', thDeg: 'Degree', thAbs: 'Abs. °',
@@ -459,6 +518,8 @@
       document.getElementById('lang-ru').classList.toggle('active', l === 'ru');
       document.getElementById('lang-en').classList.toggle('active', l === 'en');
       applyStatic();
+      const cf = document.getElementById('chip-filter');
+      if (cf) cf.placeholder = t('ui.searchPh');
       populateCoinSelect();   // пересобрать список монет
       calculateAndRender();   // перерисовать таблицу, карту и транзиты
       renderVolatilityCalendar();
@@ -525,13 +586,7 @@
           note.classList.add('hidden');
           return;
         }
-        const c = COIN_LAUNCHES[Number(sel.value)];
-        selectedCoin = c;
-        document.getElementById('input-date').value = c.date;
-        document.getElementById('input-time').value = c.time;
-        note.textContent = `${c.name}: ${t('ev.' + c.eventKey)}. ${t('ui.timeApprox')}`;
-        note.classList.remove('hidden');
-        calculateAndRender(); // автоматический пересчёт карты
+        selectCoin(COIN_LAUNCHES[Number(sel.value)]); // автоматический пересчёт карты
       });
     }
 
@@ -698,7 +753,7 @@
         svgHtml += `<line x1="${ix}" y1="${iy}" x2="${px}" y2="${py}" stroke="${p.meta.color}" stroke-dasharray="2,2" stroke-width="1"/>`;
 
         // Planet Symbol
-        svgHtml += `<text x="${px}" y="${py}" font-size="15" fill="${p.meta.color}" font-weight="bold" text-anchor="middle" class="drop-shadow-sm">${p.meta.symbol}</text>`;
+        svgHtml += `<text x="${px}" y="${py}" font-size="18" fill="${p.meta.color}" font-weight="bold" text-anchor="middle" class="drop-shadow-sm">${p.meta.symbol}</text>`;
       });
 
       // Aspect lines across chart (Center connects)
@@ -824,7 +879,11 @@
         list.innerHTML = `<p class="text-[11px] text-gray-500 py-2">${t('ui.noTransits')}</p>`;
         return;
       }
-      list.innerHTML = hits.map(h => `
+
+      // Этап 4, Progressive Disclosure: по умолчанию видны первые 3 транзита,
+      // остальные раскрываются кнопкой «Показать еще (+N)» без ухода с экрана
+      const COLLAPSED_COUNT = 3;
+      const renderHit = h => `
         <div class="bg-slate-900/60 border rounded-xl p-3" style="border-color:${h.a.color}33">
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs font-bold">
@@ -835,8 +894,79 @@
             <span class="text-[10px] text-gray-500 shrink-0 ml-2">${t('ui.orb')} ${h.orb.toFixed(1)}\u00B0 \u00B7 ${t('dur.' + h.t.meta.id)}</span>
           </div>
           <p class="text-[11px] text-gray-300 leading-snug">${t('tone.' + h.t.meta.id + '.' + h.a.key)} \u2014 ${t('nuance.' + h.n.meta.id)}.</p>
-        </div>
-      `).join('');
+        </div>`;
+
+      let expanded = false;
+      const drawList = () => {
+        const limit = expanded ? hits.length : Math.min(COLLAPSED_COUNT, hits.length);
+        list.innerHTML = hits.slice(0, limit).map(renderHit).join('');
+        if (hits.length > COLLAPSED_COUNT) {
+          const more = document.createElement('button');
+          more.className = 'w-full py-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-[0.98]';
+          more.style.cssText = 'border-color:rgba(0,230,118,0.35);color:#00E676;background:rgba(0,230,118,0.06)';
+          more.textContent = expanded
+            ? t('ui.showLess')
+            : `${t('ui.showMore')} (+${hits.length - COLLAPSED_COUNT})`;
+          more.addEventListener('click', () => { expanded = !expanded; drawList(); });
+          list.appendChild(more);
+        }
+      };
+      drawList();
+    }
+
+    /* ---- Bottom Navigation (Этап 1) ---- */
+    function showTab(name) {
+      document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
+      const page = document.getElementById('tab-' + name);
+      if (page) page.classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b =>
+        b.classList.toggle('tab-active', b.dataset.tab === name));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // График создаём лениво — только когда вкладка «Рынок» видна
+      // (у скрытого контейнера clientWidth === 0)
+      if (name === 'market') {
+        if (!liveState.chart && window.LightweightCharts) createLiveChart();
+        else if (liveState.chart) liveState.chart.applyOptions({ width: document.getElementById('live-chart').clientWidth });
+      }
+    }
+
+    /* ---- Coin Chips (Этап 2): горизонтальная лента с живым индикатором ---- */
+    function renderCoinChips(filter) {
+      const wrap = document.getElementById('coin-chips');
+      if (!wrap) return;
+      const q = (filter || '').trim().toLowerCase();
+      const items = COIN_LAUNCHES
+        .map((c, i) => ({ ...c, i }))
+        .filter(c => !q || c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+      wrap.innerHTML = items.map(c => {
+        const active = selectedCoin && selectedCoin.symbol === c.symbol;
+        return `<button data-chip="${c.i}" class="chip shrink-0 ${active ? 'chip-active' : ''}">`
+             + (active ? '<span class="live-dot"></span>' : '')
+             + `${c.symbol}</button>`;
+      }).join('');
+      wrap.querySelectorAll('[data-chip]').forEach(b =>
+        b.addEventListener('click', () => selectCoin(COIN_LAUNCHES[Number(b.dataset.chip)])));
+    }
+
+    // Единая точка выбора монеты: чипсы, выпадающий список, натальная карта,
+    // дата/время и живой график всегда синхронизированы
+    function selectCoin(c) {
+      selectedCoin = c;
+      const sel = document.getElementById('coin-select');
+      const idx = COIN_LAUNCHES.indexOf(c);
+      if (sel && idx >= 0) sel.value = String(idx);
+      document.getElementById('input-date').value = c.date;
+      document.getElementById('input-time').value = c.time;
+      const note = document.getElementById('coin-note');
+      note.textContent = `${c.name}: ${t('ev.' + c.eventKey)}. ${t('ui.timeApprox')}`;
+      note.classList.remove('hidden');
+      // синхронизация с вкладкой «Рынок»
+      liveState.symbol = binancePair(c.symbol);
+      const lc = document.getElementById('live-coin');
+      if (lc) lc.value = liveState.symbol;
+      if (liveState.chart) loadLiveChart();
+      renderCoinChips(document.getElementById('chip-filter').value);
+      calculateAndRender();
     }
 
     function calculateAndRender() {
@@ -1180,8 +1310,8 @@
         sel.dataset.bound = '1';
       }
 
-      if (!window.LightweightCharts) { setLiveStatus(lt('err')); return; }
-      if (!liveState.chart) createLiveChart();
+      if (!window.LightweightCharts) setLiveStatus(lt('err'));
+      // график создаётся лениво при первом открытии вкладки «Рынок» (showTab)
     }
 
     function createLiveChart() {
@@ -1295,6 +1425,24 @@
       calculateAndRender();
       renderVolatilityCalendar();
       renderLiveSection();
+      renderCoinChips();
+
+      // Bottom Navigation
+      document.querySelectorAll('.tab-btn').forEach(b =>
+        b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+      // Поиск по чипсам (Progressive Disclosure)
+      const chipFilter = document.getElementById('chip-filter');
+      chipFilter.placeholder = t('ui.searchPh');
+      document.getElementById('search-btn').addEventListener('click', () => {
+        chipFilter.classList.toggle('hidden');
+        if (!chipFilter.classList.contains('hidden')) chipFilter.focus();
+      });
+      chipFilter.addEventListener('input', e => renderCoinChips(e.target.value));
+
+      // «Настройки»: показ/скрытие таблицы положений планет
+      document.getElementById('settings-btn').addEventListener('click', () =>
+        document.getElementById('positions-section').classList.toggle('hidden'));
     });
   </script>
 </body>
