@@ -82,15 +82,6 @@
   <!-- Main Container -->
   <main class="w-full max-w-md mx-auto px-4 flex-1 flex flex-col space-y-5">
 
-    <!-- Volatility Calendar (30 days) -->
-    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
-      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-1" id="cal-title"></h2>
-      <p id="cal-sub" class="text-[10px] text-purple-300/60 mb-3"></p>
-      <div id="vol-calendar" class="grid grid-cols-7 gap-1.5"></div>
-      <div id="cal-legend" class="flex flex-wrap gap-2 mt-3"></div>
-      <div id="cal-detail" class="hidden mt-3 bg-slate-900/60 border border-purple-500/20 rounded-xl p-3"></div>
-    </section>
-
     <!-- Date / Time Input Controls -->
     <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
       
@@ -156,12 +147,48 @@
       <div id="transit-list" class="space-y-2"></div>
     </section>
 
+
+    <!-- Volatility Calendar (30 days) -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-1" id="cal-title"></h2>
+      <p id="cal-sub" class="text-[10px] text-purple-300/60 mb-3"></p>
+      <div id="vol-calendar" class="grid grid-cols-7 gap-1.5"></div>
+      <div id="cal-legend" class="flex flex-wrap gap-2 mt-3"></div>
+      <div id="cal-detail" class="hidden mt-3 bg-slate-900/60 border border-purple-500/20 rounded-xl p-3"></div>
+    </section>
+
+
+    <!-- Live price chart (Binance public API + WebSocket) -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg shadow-cyan-500/50">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xs uppercase tracking-wider text-purple-300 font-semibold flex items-center gap-2">
+          <span id="live-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+          <span id="live-title"></span>
+        </h2>
+        <span class="text-[9px] text-purple-300/50">Binance API · WS &lt;50 ms · no key</span>
+      </div>
+      <div class="flex space-x-2 mb-3">
+        <select id="live-coin" class="flex-1 min-w-0 bg-cosmic-900 border border-purple-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"></select>
+        <div id="live-intervals" class="flex rounded-xl border border-purple-500/30 overflow-hidden text-[11px] font-bold shrink-0"></div>
+      </div>
+      <div class="grid grid-cols-4 gap-2 mb-3 text-center">
+        <div class="bg-cosmic-900/60 rounded-xl py-2 px-1"><div class="text-[9px] text-gray-500" id="live-l-price"></div><div class="text-xs font-bold font-mono truncate" id="live-price">—</div></div>
+        <div class="bg-cosmic-900/60 rounded-xl py-2 px-1"><div class="text-[9px] text-gray-500" id="live-l-chg"></div><div class="text-xs font-bold font-mono" id="live-chg">—</div></div>
+        <div class="bg-cosmic-900/60 rounded-xl py-2 px-1"><div class="text-[9px] text-gray-500" id="live-l-high"></div><div class="text-xs font-bold font-mono truncate" id="live-high">—</div></div>
+        <div class="bg-cosmic-900/60 rounded-xl py-2 px-1"><div class="text-[9px] text-gray-500" id="live-l-low"></div><div class="text-xs font-bold font-mono truncate" id="live-low">—</div></div>
+      </div>
+      <div id="live-chart" class="w-full rounded-xl overflow-hidden" style="height:280px"></div>
+      <p id="live-status" class="hidden text-[11px] text-red-400 mt-2"></p>
+    </section>
+
   </main>
 
   <!-- Footer -->
   <footer class="text-center text-[10px] text-gray-500 mt-6">
     <p data-i18n="ui.footer">Engine v2 • JPL Keplerian Elements • 10 тел • точность ~0.1° (1800–2050)</p>
   </footer>
+
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
   <!-- Inline Orbital Calculation Engine & App Logic -->
   <script>
@@ -435,6 +462,7 @@
       populateCoinSelect();   // пересобрать список монет
       calculateAndRender();   // перерисовать таблицу, карту и транзиты
       renderVolatilityCalendar();
+      renderLiveSection();
     }
 
     function initLang() {
@@ -1051,6 +1079,199 @@
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+
+    /* =========================================================================
+       ЖИВОЙ ГРАФИК: Binance public market data API
+       - REST: исторические свечи + статистика 24ч (data-api.binance.vision,
+         фолбэк api.binance.com), без ключа, CORS открыт
+       - WebSocket: поток kline_<interval> (data-stream.binance.vision,
+         фолбэк stream.binance.com:9443), обновление последней свечи ~250 мс
+       ========================================================================= */
+    const LIVE_I18N = {
+      ru: {
+        title: 'Живой график', price: 'Цена', chg: 'Изм. 24ч', high: 'Макс 24ч', low: 'Мин 24ч',
+        loading: 'Загрузка…',
+        err: 'Не удалось загрузить рыночные данные: проверьте сеть или попробуйте VPN (API Binance может быть заблокирован в вашем регионе).',
+        iv: { '15m': '15м', '1h': '1ч', '4h': '4ч', '1d': '1д' }
+      },
+      en: {
+        title: 'Live chart', price: 'Price', chg: '24h chg', high: '24h high', low: '24h low',
+        loading: 'Loading…',
+        err: 'Could not load market data: check your network or try a VPN (Binance API may be blocked in your region).',
+        iv: { '15m': '15m', '1h': '1h', '4h': '4h', '1d': '1d' }
+      }
+    };
+    function lt(path) {
+      const get = (obj) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+      return get(LIVE_I18N[lang]) ?? get(LIVE_I18N.ru) ?? path;
+    }
+
+    const LIVE_INTERVALS = ['15m', '1h', '4h', '1d'];
+    // Маркет-дата-only хосты Binance: не требуют ключ и работают в регионах,
+    // где основной api.binance.com недоступен
+    const BINANCE_REST_HOSTS = ['https://data-api.binance.vision', 'https://api.binance.com'];
+    const BINANCE_WS_HOSTS = ['wss://data-stream.binance.vision/ws', 'wss://stream.binance.com:9443/ws'];
+    // Монеты, у которых тикер на бирже отличается от привычного символа
+    const PAIR_OVERRIDE = { USDT: 'USDCUSDT', MATIC: 'POLUSDT' };
+
+    const liveState = {
+      symbol: 'BTCUSDT', interval: '1h',
+      chart: null, series: null, ws: null, wsHostIdx: 0
+    };
+
+    function binancePair(sym) { return PAIR_OVERRIDE[sym] || (sym + 'USDT'); }
+
+    async function binanceFetch(path) {
+      let lastErr;
+      for (const host of BINANCE_REST_HOSTS) {
+        try {
+          const r = await fetch(host + path, { cache: 'no-store' });
+          if (r.ok) return await r.json();
+          lastErr = new Error('HTTP ' + r.status);
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr;
+    }
+
+    function fmtPrice(p) {
+      if (!isFinite(p)) return '—';
+      if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 1 });
+      if (p >= 1) return p.toFixed(p >= 100 ? 2 : 4);
+      return p.toPrecision(4);
+    }
+
+    function setLiveStatus(txt) {
+      const el = document.getElementById('live-status');
+      if (!txt) { el.classList.add('hidden'); return; }
+      el.textContent = txt;
+      el.classList.remove('hidden');
+    }
+
+    function renderLiveSection() {
+      document.getElementById('live-title').textContent = lt('title');
+      document.getElementById('live-l-price').textContent = lt('price');
+      document.getElementById('live-l-chg').textContent = lt('chg');
+      document.getElementById('live-l-high').textContent = lt('high');
+      document.getElementById('live-l-low').textContent = lt('low');
+
+      // Переключатель таймфреймов
+      const iv = document.getElementById('live-intervals');
+      iv.innerHTML = LIVE_INTERVALS.map(i =>
+        `<button data-iv="${i}" class="px-2.5 py-2 transition-colors ${liveState.interval === i ? 'bg-purple-600/40 text-white' : 'text-purple-300'}">${lt('iv.' + i)}</button>`
+      ).join('');
+      iv.querySelectorAll('button').forEach(b =>
+        b.addEventListener('click', () => {
+          if (liveState.interval === b.dataset.iv) return;
+          liveState.interval = b.dataset.iv;
+          renderLiveSection();
+          loadLiveChart();
+        }));
+
+      // Селектор монет (те же, что в натальных картах)
+      const sel = document.getElementById('live-coin');
+      if (!sel.dataset.bound) {
+        sel.innerHTML = COIN_LAUNCHES.map(c => {
+          const pair = binancePair(c.symbol);
+          const quote = pair.endsWith('USDT') ? 'USDT' : pair.replace(c.symbol.replace('MATIC','POL'), '');
+          return `<option value="${pair}">${c.symbol} / ${quote}</option>`;
+        }).join('');
+        sel.value = liveState.symbol;
+        sel.addEventListener('change', () => { liveState.symbol = sel.value; loadLiveChart(); });
+        sel.dataset.bound = '1';
+      }
+
+      if (!window.LightweightCharts) { setLiveStatus(lt('err')); return; }
+      if (!liveState.chart) createLiveChart();
+    }
+
+    function createLiveChart() {
+      const el = document.getElementById('live-chart');
+      el.innerHTML = '';
+      const chart = LightweightCharts.createChart(el, {
+        layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#94A3B8', fontSize: 10 },
+        grid: { vertLines: { color: 'rgba(139,92,246,0.07)' }, horzLines: { color: 'rgba(139,92,246,0.07)' } },
+        timeScale: { borderColor: 'rgba(139,92,246,0.3)', timeVisible: true, secondsVisible: false },
+        rightPriceScale: { borderColor: 'rgba(139,92,246,0.3)' },
+        crosshair: { mode: 0 }
+      });
+      liveState.chart = chart;
+      liveState.series = chart.addCandlestickSeries({
+        upColor: '#10B981', downColor: '#EF4444',
+        wickUpColor: '#10B981', wickDownColor: '#EF4444', borderVisible: false
+      });
+      new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth, height: el.clientHeight })).observe(el);
+      loadLiveChart();
+    }
+
+    async function loadLiveChart() {
+      const st = liveState;
+      try {
+        setLiveStatus(null);
+        const [klines, ticker] = await Promise.all([
+          binanceFetch(`/api/v3/klines?symbol=${st.symbol}&interval=${st.interval}&limit=300`),
+          binanceFetch(`/api/v3/ticker/24hr?symbol=${st.symbol}`)
+        ]);
+        const candles = klines.map(k => ({
+          time: Math.floor(k[0] / 1000),
+          open: +k[1], high: +k[2], low: +k[3], close: +k[4]
+        }));
+        const p = candles[candles.length - 1].close;
+        const dec = p >= 100 ? 2 : p >= 1 ? 4 : 8;
+        st.series.applyOptions({ priceFormat: { type: 'price', precision: dec, minMove: Math.pow(10, -dec) } });
+        st.series.setData(candles);
+        st.chart.timeScale().fitContent();
+
+        document.getElementById('live-price').textContent = fmtPrice(+ticker.lastPrice);
+        const chg = +ticker.priceChangePercent;
+        const chgEl = document.getElementById('live-chg');
+        chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+        chgEl.style.color = chg >= 0 ? '#10B981' : '#EF4444';
+        document.getElementById('live-high').textContent = fmtPrice(+ticker.highPrice);
+        document.getElementById('live-low').textContent = fmtPrice(+ticker.lowPrice);
+        connectLiveWS();
+      } catch (e) {
+        setLiveStatus(lt('err'));
+      }
+    }
+
+    function connectLiveWS() {
+      const st = liveState;
+      if (st.ws) { try { st.ws.onclose = null; st.ws.close(); } catch (e) {} }
+      const host = BINANCE_WS_HOSTS[st.wsHostIdx % BINANCE_WS_HOSTS.length];
+      const ws = new WebSocket(`${host}/${st.symbol.toLowerCase()}@kline_${st.interval}`);
+      ws.onmessage = ev => {
+        let msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        const k = msg.k;
+        if (!k || !st.series) return;
+        st.series.update({
+          time: Math.floor(k.t / 1000),
+          open: +k.o, high: +k.h, low: +k.l, close: +k.c
+        });
+        if (k.x) { // свеча закрылась — обновим статистику 24ч
+          binanceFetch(`/api/v3/ticker/24hr?symbol=${st.symbol}`).then(ticker => {
+            const chg = +ticker.priceChangePercent;
+            const chgEl = document.getElementById('live-chg');
+            chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+            chgEl.style.color = chg >= 0 ? '#10B981' : '#EF4444';
+            document.getElementById('live-high').textContent = fmtPrice(+ticker.highPrice);
+            document.getElementById('live-low').textContent = fmtPrice(+ticker.lowPrice);
+          }).catch(() => {});
+        }
+        const priceEl = document.getElementById('live-price');
+        priceEl.textContent = fmtPrice(+k.c);
+        priceEl.style.color = +k.c >= +k.o ? '#10B981' : '#EF4444';
+      };
+      ws.onclose = () => {
+        // фолбэк на другой хост и переподключение
+        setTimeout(() => {
+          if (liveState.ws === ws) { liveState.wsHostIdx++; connectLiveWS(); }
+        }, 4000);
+      };
+      ws.onerror = () => ws.close();
+      st.ws = ws;
+    }
+
     // Set Default Values on Load (Current Date & Time)
     window.addEventListener('DOMContentLoaded', () => {
       const now = new Date();
@@ -1073,6 +1294,7 @@
 
       calculateAndRender();
       renderVolatilityCalendar();
+      renderLiveSection();
     });
   </script>
 </body>
